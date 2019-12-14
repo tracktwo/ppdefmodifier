@@ -132,6 +132,7 @@ namespace PPDefModifier
                     obj = field.GetValue(obj);
                     if (obj == null)
                         Debug.LogFormat("PPDefModifier: Could not retrieve object from field {0} in type {1}", fields[i], type.Name);
+                    type = obj.GetType();
                 }
                 else
                 {

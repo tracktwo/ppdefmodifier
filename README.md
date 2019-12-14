@@ -2,6 +2,13 @@
 
 This mod allows easy edits to some game values in Phoenix Point without needing to build a full mod for each one. The values to change are put into a configuration file and the file is read an applied when the game loads. If you are familiar with INI mods in XCOM games, this can do something similar. Unfortunately this is not quite as straightforward as .ini modding - a big part of making this useful is _finding_ the value you want to change and this is currently not very easy.
 
+
+## Warning
+
+Phoenix Point doesn't have official mod support. This mod may break or your own config mods may stop working whenever the game is patched, leaving your campaign in an inconsistent and maybe unplayable state.
+
+Hacking up the defs can also cause unexpected behaviour in the game. Before you report a bug please make sure you verify with an unmodded game, otherwise you may just be making life much more difficult for the devs. They don't need to waste time trying to figure out how something that should be impossible in the base game has happened because you made it possible with a mod.
+
 ## What can be changed?
 
 Many game constants can be changed by this mod. Some examples are:
@@ -54,7 +61,7 @@ The config file contains a list of mods to apply, where each one contains:
         "guid": "228f2cd8-8ca2-4224-ead6-c9c684f52172",
         "field": "BaseStats.SpaceForUnits",
         "value": 8,
-        "comment": "Set maniticore carrying capacity size to 8"
+        "comment": "Set Manticore carrying capacity to 8"
     }
 ]
 ```
@@ -67,12 +74,14 @@ The second entry changes the carrying capacity of the Manticore to 8 soldiers. T
 
 Each mod needs one of either `cls` or `guid`. `value` and `field` are required in all mods. `comment` is optional and allows you to provide a human-readable description of the mod, especially useful for guids.
 
+If you are unfamiliar with Json: When building your own configuration file the square brackets `[` and `]` are needed, even when writing only one mod. Each mod definition goes in curly braces `{` `}`, and are separated by commas. There should be no comma after the last entry before the closing `]`. It may be helpful to paste the file into a Json validator (available online) to make sure it's a valid json file.
+
 ## Troubleshooting
 
 First, note that changing some values may require a new campaign to take effect. These mods change the base value from the game, but any instances that have already been created in your save may still have the old value. Depending on exactly what the mod changes you may be able to just wait until new instances are generated (building new equipment, for example) without needing a whole new campaign.
 
 The mod will write log information if it fails to read your config file or fails to apply a mod. The log file can be found
-in `Users\YourUsername\AppData\LocalLow\Snapshot Games Inc\Phoenix Point\outlog_log.txt`, search for "PPDefModifier" for logs from the mod that will hopefully point you at what has gone wrong.
+in `Users\YourUsername\AppData\LocalLow\Snapshot Games Inc\Phoenix Point\outlog_log.txt`, search for "PPDefModifier" for logs from the mod that will hopefully point you at what has gone wrong. If the log just indicates the file failed to parse you may have an error in your file. Pasting it into a Json validator site may help to find errors in your config.
 
 # Finding the definitions to change
 
@@ -81,7 +90,7 @@ to this that will always work, there is some detective work involved. Some possi
 
 - The value is stored in an asset, like the manticore size above. Most values for soldiers, enemies, equipment, etc are probably in here. Finding the thing you want to change will likely involve looking through the asset files and just searching for names that sound lkely.
 - The value is stored in a field somewhere in the game code, like the console mod above. This is fairly rare. Finding such a value will require digging around in a program like `dnSpy`.
-- The value is hardcoded into the game code itself. Such values can't be changed by this mod, but you may be able to change the code behavior with a full C# mod. Again `dnSpy` can help you to find out where this is, but this mod won't be able to modify it.
+- The value is hardcoded into the game code itself. Such values can't be changed by this mod, but you may be able to change the code behaviour with a full C# mod. Again `dnSpy` can help you to find out where this is, but this mod won't be able to modify it.
 
 ## Tools for finding assets and code values
 
@@ -100,13 +109,13 @@ The following screenshot shows an example for the Manticore capacity mod:
 The entry in the asset list is named `PP_Manticore_Def`. The fields you are interested in will usually be of type `MonoBehaviour`, but the names may be hard to guess and may require either poking around in dnSpy or just searching for
 likely names and seeing if anything useful pops up. They will usually be named with `_Def` on the end, possibly with another word such as `_EquipmentDef` or `_WeaponDef`.
 
-The highlighted lines are the ones that you need to build the mod config. The first highlighted line shows the guid. This is always named `Guid` and is the value to use in the `guid` field of the mod. The next two show the path to the value we want to change. `SpaceForUnits` has the value 6, so that looks like the one we want. It is indented in the dump, showing that this field is not directly within the object itself but is nested within a field called `BaseStats`. The `field` value to use is the names of any nested objects separted by `.` followed by the name of the field to change itself. In this case, `"BaseStats.SpaceForUnits"`, and the `value` field can be set to the value you want:
+The highlighted lines are the ones that you need to build the mod config. The first highlighted line shows the guid. This is always named `Guid` and is the value to use in the `guid` field of the mod. The next two show the path to the value we want to change. `SpaceForUnits` has the value 6, so that looks like the one we want. It is indented in the dump, showing that this field is not directly within the object itself but is nested within a field called `BaseStats`. The `field` value to use is the names of any nested objects separted by `.` followed by the name of the field to change itself. In this case, `"BaseStats.SpaceForUnits"`, and the `value` field can be set to the value you want (in this example, 8):
 
 ```json
 {
     "guid": "228f2cd8-8ca2-4224-ead6-c9c684f52172",
     "field": "BaseStats.SpaceForUnits",
-    "value": your_value_goes_here,
+    "value": 8,
     "comment": "Optional string describing this mod"
 }
 ````
