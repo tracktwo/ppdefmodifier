@@ -99,7 +99,7 @@ The highlighted lines are the ones that you need to build the mod config. The fi
 {
     "guid": "228f2cd8-8ca2-4224-ead6-c9c684f52172",
     "field": "BaseStats.SpaceForUnits",
-    "value": <your value goes here>,
+    "value": your_value_goes_here,
     "comment": "Optional string describing this mod"
 }
 ````
