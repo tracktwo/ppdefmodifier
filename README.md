@@ -67,14 +67,21 @@ The second entry changes the carrying capacity of the Manticore to 8 soldiers. T
 
 Each mod needs one of either `cls` or `guid`. `value` and `field` are required in all mods. `comment` is optional and allows you to provide a human-readable description of the mod, especially useful for guids.
 
+## Troubleshooting
+
+First, note that changing some values may require a new campaign to take effect. These mods change the base value from the game, but any instances that have already been created in your save may still have the old value. Depending on exactly what the mod changes you may be able to just wait until new instances are generated (building new equipment, for example) without needing a whole new campaign.
+
+The mod will write log information if it fails to read your config file or fails to apply a mod. The log file can be found
+in `Users\YourUsername\AppData\LocalLow\Snapshot Games Inc\Phoenix Point\outlog_log.txt`, search for "PPDefModifier" for logs from the mod that will hopefully point you at what has gone wrong.
+
 # Finding the definitions to change
 
 The biggest difficulty is in _finding_ where the thing you want to change is in the game files. There is no single method
 to this that will always work, there is some detective work involved. Some possibilities are:
 
-- The value is stored in an asset, like the manticore size above. Most values for soldiers, enemies, equipment, etc are probably in here. Finding the thing you want to change will likely involve looking through the asset files.
-- The value is stored in a field somewhere in the game code, like the console mod above. This is fairly rare.
-- The value is hardcoded into the game code itself. Such values can't be changed by this mod, but you may be able to change the code behavior with a full C# mod.
+- The value is stored in an asset, like the manticore size above. Most values for soldiers, enemies, equipment, etc are probably in here. Finding the thing you want to change will likely involve looking through the asset files and just searching for names that sound lkely.
+- The value is stored in a field somewhere in the game code, like the console mod above. This is fairly rare. Finding such a value will require digging around in a program like `dnSpy`.
+- The value is hardcoded into the game code itself. Such values can't be changed by this mod, but you may be able to change the code behavior with a full C# mod. Again `dnSpy` can help you to find out where this is, but this mod won't be able to modify it.
 
 ## Tools for finding assets and code values
 
