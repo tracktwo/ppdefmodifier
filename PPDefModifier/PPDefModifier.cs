@@ -18,7 +18,7 @@ namespace PPDefModifier
     public class ModifierDefinition
     {
         public string guid;
-        public string obj;
+        public string cls;
         public string field;
         public double value;
         public string comment;
@@ -62,19 +62,19 @@ namespace PPDefModifier
         // Check that the mod is well-formed: needs exactly one of guid or obj, and must have a field.
         public static bool ValidateModifier(ModifierDefinition mod)
         {
-            if (mod.guid == null && mod.obj == null)
+            if (mod.guid == null && mod.cls == null)
             {
-                Debug.LogFormat("PPDefModifier: No guid or object in mod");
+                Debug.LogFormat("PPDefModifier: No guid or cls in mod");
                 return false;
             }
-            if (mod.guid != null && mod.obj != null)
+            if (mod.guid != null && mod.cls != null)
             {
-                Debug.LogFormat("PPDefModifier: Both guid and object in mod");
+                Debug.LogFormat("PPDefModifier: Both guid and cls in mod");
                 return false;
             }
             if (mod.field == null)
             {
-                Debug.LogFormat("PPDefModifier: No field in mod with guid {0}", mod.guid);
+                Debug.LogFormat("PPDefModifier: No field in mod for {0}", mod.guid ?? mod.cls);
                 return false;
             }
 
@@ -100,18 +100,18 @@ namespace PPDefModifier
             }
             else
             {
-                string objName = mod.obj;
+                string className = mod.cls;
                 // Qualify the obj name with the assembly name if one is not provided.
-                if (!objName.Contains(','))
+                if (!className.Contains(','))
                 {
-                    objName = objName + ", Assembly-CSharp";
+                    className = className + ", Assembly-CSharp";
                 }
 
                 // Find the type of this object. The field to modify will have to be static.
-                type = Type.GetType(mod.obj);
+                type = Type.GetType(className);
                 if (type == null)
                 {
-                    Debug.LogFormat("Failed to find type for static object {0}", mod.obj);
+                    Debug.LogFormat("Failed to find type for class {0}", mod.cls);
                     return;
                 }
             }
