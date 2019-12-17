@@ -29,7 +29,7 @@ Easier than making a C# mod, but finding the things to change is currently tough
 
 ## Why not use separate C# mods instead of this weird config file scheme?
 
-First because it's easier - see above. Downloading DLLs also has some risk and requires you to trust the author (or to read the source and rebuild the DLL yourself). This method requires only trusting the base mod and each actual change is just a text description. It also can help you make mods _like_ an existing one by changing values or related assets instead of having to wait for someone to build that mod.
+First because it's easier - you don't need VS or to know how to build a C# project, you just need a text editor. Downloading DLLs also has some risk and requires you to trust the author (or to read the source and rebuild the DLL yourself). This method requires only trusting the base mod and each actual change is just a text description. It also can help you make mods _like_ an existing one by changing values or related assets instead of having to wait for someone to build that mod.
 
 # Installation
 
@@ -39,9 +39,9 @@ Copy `PPDefModifier.dll` to your `Mods` folder created by the Mod Injector. Crea
 
 # Quickstart configuration
 
-For the mod to do anything you must provide a config file that lists the changes you want to apply to the game. This file must be called `PPDefModifier.json` and must be next to the mod DLL in your `Mods` folder.
+For the mod to do anything you must provide one or more config files that list the changes you want to apply to the game. The mod will read all .json files in a folder named `PPDefModifier` in the `Mods` folder, including those in other subdirectories, applying all mods found in each file. This is the preferred mechanism to write mods that are small and easy to share. For backward compatibility with the first release the mod will also read a file named `PPDefModifier.json` in the `Mods` directory if it exists.
 
-The config file contains a list of mods to apply, where each one contains:
+Each config file may contain a list of mods to apply, where each one has:
 
 - Either a guid for the asset to change or the class name of a static field to change
 - The name of the field you want to change within that asset or class
@@ -66,11 +66,11 @@ The config file contains a list of mods to apply, where each one contains:
 ]
 ```
 
-This exmaple file contains two mods:
+This example file contains two mods:
 
 The first enables console access by changing the value of the static field `DisableConsoleAccess` within the class `Base.Utils.GameConsole.GameConsoleWindow` to `false` (0).
 
-The second entry changes the carrying capacity of the Manticore to 8 soldiers. The manticore is identified by the guid `"228f2cd8-8ca2-4224-ead6-c9c684f52172"`, and the carrying capacity is within the `BaseStats` struct in a field named `SpaceForUnits`.
+The second entry changes the carrying capacity of the Manticore to 8 soldiers. The Manticore is identified by the guid `"228f2cd8-8ca2-4224-ead6-c9c684f52172"`, and the carrying capacity is within the `BaseStats` struct in a field named `SpaceForUnits`.
 
 Each mod needs one of either `cls` or `guid`. `value` and `field` are required in all mods. `comment` is optional and allows you to provide a human-readable description of the mod, especially useful for guids.
 
@@ -88,17 +88,17 @@ in `Users\YourUsername\AppData\LocalLow\Snapshot Games Inc\Phoenix Point\outlog_
 The biggest difficulty is in _finding_ where the thing you want to change is in the game files. There is no single method
 to this that will always work, there is some detective work involved. Some possibilities are:
 
-- The value is stored in an asset, like the manticore size above. Most values for soldiers, enemies, equipment, etc are probably in here. Finding the thing you want to change will likely involve looking through the asset files and just searching for names that sound lkely.
+- The value is stored in an asset, like the Manticore size above. Most values for soldiers, enemies, equipment, etc are probably in here. Finding the thing you want to change will likely involve looking through the asset files and just searching for names that sound likely.
 - The value is stored in a field somewhere in the game code, like the console mod above. This is fairly rare. Finding such a value will require digging around in a program like `dnSpy`.
 - The value is hardcoded into the game code itself. Such values can't be changed by this mod, but you may be able to change the code behaviour with a full C# mod. Again `dnSpy` can help you to find out where this is, but this mod won't be able to modify it.
 
 ## Tools for finding assets and code values
 
-Some useful tools for locating the values and/or assets are [dnSpy](https://github.com/0xd4d/dnSpy) to inspect the game code or an asset viewer such as [AssetStudio](https://github.com/Perfare/AssetStudio).
+Some useful tools for locating the values and/or assets are [dnSpy](https://github.com/0xd4d/dnSpy) to inspect the game code or an asset viewer such as [AssetStudio](https://github.com/Perfare/AssetStudio). Note that the main AssetStudio project can't process some of the Phoenix Point asset definitions. Until this is fixed in that project you can use my fork of the project that fixes the problem. See [here](https://github.com/tracktwo/AssetStudio). The release page has a binary build with the patch.
 
 ### Using AssetStudio to find Assets
 
-Many game assets are stored in the `sharedassets0.assets` file in the `PhoenixPointWin64_Data` folder for the game. The latest release of AssetStudio as well as the Unity Asset Bundle Extractor both have issues reading the Phoenix Point asset files. I'm working on some patches for AssetStudio to support these. Equipment defs especially cause problems right now and may cause AssetStudio to hang or UABE to fail to show any information on an asset.
+Many game assets are stored in the `sharedassets0.assets` file in the `PhoenixPointWin64_Data` folder for the game. The latest release of AssetStudio as well as the Unity Asset Bundle Extractor both have issues reading the Phoenix Point asset files, especially for equipment. See the section above for a link to a patched AssetStudio that can read these files.
 
 To search for assets select "Open File" from the File menu in AssetStudio and select the `sharedassets0.assets` file. In the `Asset List` tab enter a search word in the text box below the tab, and select the entry that looks like it might be the one you want. After choosing a dialog will pop up asking you to select the Assembly folder. Select the `Managed` folder under `PhoenixPointWin64_Data` and click "Select Folder".
 
@@ -122,9 +122,9 @@ The highlighted lines are the ones that you need to build the mod config. The fi
 
 # Configuration File Format Reference
 
-The configuration file is a json file named `PPDefModifier.json` and must be next to the mod DLL in your `Mods` folder. This file must contain an array defining the mod objects. See below for a sample of the file format.
+Mod configuration files are json files. This mod will read all .json files in the `PPDefModifier` directory under `Mods` or any subdirectory within it, as well as a file named `PPDefModifier.json` if it exists in the `Mods` directory directly. Placing individual mod configuration files in a `PPDefModifier` directory or a subdirectory below it is the preferred method, the `PPDefModifier.json` file in the `Mods` directory is for backwards compatibility with the original release.
 
-Each mod has the following fields:
+Each configuration file must contain an array defining the mod objects. Each mod in the array has the following fields:
 
 ### guid
 

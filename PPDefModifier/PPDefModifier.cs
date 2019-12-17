@@ -27,61 +27,99 @@ namespace PPDefModifier
     public class PPDefModifier
     {
         public static string fileName = "Mods/PPDefModifier.json";
+        public static string directoryName = "Mods/PPDefModifier";
         public static void Init()
         {
-            // Parse the config file into 
+            bool foundMod = false;
+
+            // First search the original config file.
             if (File.Exists(fileName))
             {
-                try
+                foundMod = true;
+                ModFile f = new ModFile(fileName);
+                f.ApplyMods();
+            }
+
+            // If there is a config directory, process all json files within it.
+            if (Directory.Exists(directoryName))
+            {
+                var files = Directory.GetFiles(directoryName, "*.json", SearchOption.AllDirectories);
+                if (files != null)
                 {
-                    string contents = File.ReadAllText(fileName);
-                    List<ModifierDefinition> mods = JsonConvert.DeserializeObject<List<ModifierDefinition>>(contents);
-                    if (mods == null || mods.Count() == 0)
+                    foundMod = true;
+                    foreach (var f in files)
                     {
-                        Debug.Log("Failed to parse mod file.");
+                        ModFile m = new ModFile(f);
+                        m.ApplyMods();
                     }
-                    foreach (var mod in mods)
-                    {
-                        if (ValidateModifier(mod))
-                        {
-                            ApplyModifier(mod);
-                        }
-                    }
-                }
-                catch(Exception e)
-                {
-                    Debug.LogFormat("PPDefModifier: Caught exception during json read or parse: {0}", e.ToString());
                 }
             }
-            else
+
+            if (!foundMod)
             {
                 Debug.Log("PPDefModifier: No config file found.");
             }
         }
+    }
+
+    public class ModFile
+    {
+        public ModFile(string fileName)
+        {
+            this.fileName_ = fileName;
+        }
+
+        public void ApplyMods()
+        {
+            LogFormat("Applying mods...");
+            try
+            {
+                string contents = File.ReadAllText(fileName_);
+                List<ModifierDefinition> mods = JsonConvert.DeserializeObject<List<ModifierDefinition>>(contents);
+                if (mods == null || mods.Count() == 0)
+                {
+                    LogFormat("Failed to parse mod file");
+                }
+                foreach (var mod in mods)
+                {
+                    if (ValidateModifier(mod))
+                    {
+                        ApplyModifier(mod);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                LogFormat("PPDefModifier: Caught exception during json read or parse: {0}", e.ToString());
+            }
+        }
+
+
 
         // Check that the mod is well-formed: needs exactly one of guid or obj, and must have a field.
-        public static bool ValidateModifier(ModifierDefinition mod)
+        public bool ValidateModifier(ModifierDefinition mod)
         {
             if (mod.guid == null && mod.cls == null)
             {
-                Debug.LogFormat("PPDefModifier: No guid or cls in mod");
+                LogFormat("No guid or cls in mod");
                 return false;
             }
             if (mod.guid != null && mod.cls != null)
             {
-                Debug.LogFormat("PPDefModifier: Both guid and cls in mod");
+                LogFormat("Both guid and cls in mod");
                 return false;
             }
+
             if (mod.field == null)
             {
-                Debug.LogFormat("PPDefModifier: No field in mod for {0}", mod.guid ?? mod.cls);
+                LogFormat("No field in mod for {0}", mod.guid ?? mod.cls);
                 return false;
             }
 
             return true;
         }
 
-        public static void ApplyModifier(ModifierDefinition mod)
+        public void ApplyModifier(ModifierDefinition mod)
         {
             System.Object obj = null;
             Type type = null;
@@ -92,7 +130,7 @@ namespace PPDefModifier
                 obj = GameUtl.GameComponent<DefRepository>().GetDef(mod.guid);
                 if (obj == null)
                 {
-                    Debug.LogFormat("Failed to find def {0}", mod.guid);
+                    LogFormat("Failed to find def {0}", mod.guid);
                     return;
                 }
 
@@ -111,7 +149,7 @@ namespace PPDefModifier
                 type = Type.GetType(className);
                 if (type == null)
                 {
-                    Debug.LogFormat("Failed to find type for class {0}", mod.cls);
+                    LogFormat("Failed to find type for class {0}", mod.cls);
                     return;
                 }
             }
@@ -123,7 +161,7 @@ namespace PPDefModifier
                 FieldInfo field = type.GetField(fields[i]);
                 if (field == null)
                 {
-                    Debug.LogFormat("PPDefModifier: Could not find field named {0} in type {1}", fields[i], type.Name);
+                    LogFormat("Could not find field named {0} in type {1}", fields[i], type.Name);
                     return;
                 }
 
@@ -131,7 +169,7 @@ namespace PPDefModifier
                 {
                     obj = field.GetValue(obj);
                     if (obj == null)
-                        Debug.LogFormat("PPDefModifier: Could not retrieve object from field {0} in type {1}", fields[i], type.Name);
+                        LogFormat("Could not retrieve object from field {0} in type {1}", fields[i], type.Name);
                     type = obj.GetType();
                 }
                 else
@@ -141,12 +179,19 @@ namespace PPDefModifier
             }
         }
 
-        public static void AssignField(System.Object obj, FieldInfo field, double value)
+        public void LogFormat(string s, params object[] args)
+        {
+            string prefix = string.Format("PPDefModifier: {0}: ", fileName_);
+            string rest = string.Format(s, args);
+            Debug.Log(prefix + rest);
+        }
+
+        public void AssignField(System.Object obj, FieldInfo field, double value)
         {
             Type fieldType = field.FieldType;
             if (!fieldType.IsPrimitive)
             {
-                Debug.LogFormat("PPDefModifier: Field {0} does not have primitive type");
+                LogFormat("Field {0} does not have primitive type", field.Name);
                 return;
             }
 
@@ -156,10 +201,12 @@ namespace PPDefModifier
                 System.Object converted = Convert.ChangeType(value, fieldType);
                 field.SetValue(obj, converted);
             }
-            catch(Exception)
+            catch (Exception)
             {
-                Debug.LogFormat("PPDefModifier: Error converting value to type {0} of field {1}", fieldType.Name, field.Name);
+                LogFormat("Error converting value to type {0} of field {1}", fieldType.Name, field.Name);
             }
         }
+
+        private string fileName_ { get; set; }
     }
 }
