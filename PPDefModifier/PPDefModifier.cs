@@ -7,6 +7,7 @@ using Base.Core;
 using Base.Defs;
 using System.Reflection;
 using Newtonsoft.Json;
+using System.Collections;
 
 namespace PPDefModifier
 {
@@ -36,6 +37,7 @@ namespace PPDefModifier
             if (File.Exists(fileName))
             {
                 foundMod = true;
+                Debug.LogFormat("PPDefModifier: Applying mods in {0}", fileName);
                 ModFile f = new ModFile(fileName);
                 f.ApplyMods();
             }
@@ -49,6 +51,7 @@ namespace PPDefModifier
                     foundMod = true;
                     foreach (var f in files)
                     {
+                        Debug.LogFormat("PPDefModifier: Applying mods in {0}", f);
                         ModFile m = new ModFile(f);
                         m.ApplyMods();
                     }
@@ -67,56 +70,55 @@ namespace PPDefModifier
         public ModFile(string fileName)
         {
             this.fileName_ = fileName;
+            this.repo_ = new PPDefRepository(GameUtl.GameComponent<DefRepository>());
+        }
+
+        internal ModFile(string fileName, IDefRepository repo)
+        {
+            this.fileName_ = fileName;
+            this.repo_ = repo;
         }
 
         public void ApplyMods()
         {
-            LogFormat("Applying mods...");
             try
             {
                 string contents = File.ReadAllText(fileName_);
                 List<ModifierDefinition> mods = JsonConvert.DeserializeObject<List<ModifierDefinition>>(contents);
                 if (mods == null || mods.Count() == 0)
                 {
-                    LogFormat("Failed to parse mod file");
+                    BadMod("Failed to parse mod file");
                 }
                 foreach (var mod in mods)
                 {
-                    if (ValidateModifier(mod))
-                    {
-                        ApplyModifier(mod);
-                    }
+                    ValidateModifier(mod);
+                    ApplyModifier(mod);
                 }
             }
             catch (Exception e)
             {
-                LogFormat("PPDefModifier: Caught exception during json read or parse: {0}", e.ToString());
+                BadMod("PPDefModifier: Caught exception during json read or parse: {0}", e.ToString());
             }
         }
 
 
 
         // Check that the mod is well-formed: needs exactly one of guid or obj, and must have a field.
-        public bool ValidateModifier(ModifierDefinition mod)
+        public void ValidateModifier(ModifierDefinition mod)
         {
             if (mod.guid == null && mod.cls == null)
             {
-                LogFormat("No guid or cls in mod");
-                return false;
+                BadMod("No guid or cls in mod");
             }
             if (mod.guid != null && mod.cls != null)
             {
-                LogFormat("Both guid and cls in mod");
-                return false;
+                BadMod("Both guid and cls in mod");
             }
 
             if (mod.field == null)
             {
-                LogFormat("No field in mod for {0}", mod.guid ?? mod.cls);
-                return false;
+                BadMod("No field in mod for {0}", mod.guid ?? mod.cls);
             }
-
-            return true;
         }
 
         public void ApplyModifier(ModifierDefinition mod)
@@ -127,11 +129,10 @@ namespace PPDefModifier
             // Try to find the def if we have a guid
             if (mod.guid != null)
             {
-                obj = GameUtl.GameComponent<DefRepository>().GetDef(mod.guid);
+                obj = repo_.GetDef(mod.guid);
                 if (obj == null)
                 {
-                    LogFormat("Failed to find def {0}", mod.guid);
-                    return;
+                    BadMod("Failed to find def {0}", mod.guid);
                 }
 
                 type = obj.GetType();
@@ -149,8 +150,7 @@ namespace PPDefModifier
                 type = Type.GetType(className);
                 if (type == null)
                 {
-                    LogFormat("Failed to find type for class {0}", mod.cls);
-                    return;
+                    BadMod("Failed to find type for class {0}", mod.cls);
                 }
             }
             // Try to locate the correct field
@@ -158,41 +158,77 @@ namespace PPDefModifier
 
             for (int i = 0; i < fields.Length; ++i)
             {
-                FieldInfo field = type.GetField(fields[i]);
+                string fieldString = fields[i];
+                int arrayIndex = -1;
+
+                fieldString = DecomposeArray(fieldString, out arrayIndex);
+
+                FieldInfo field = type.GetField(fieldString);
                 if (field == null)
                 {
-                    LogFormat("Could not find field named {0} in type {1}", fields[i], type.Name);
-                    return;
+                    BadMod("Could not find field named {0} in type {1}", fieldString, type.Name);
                 }
 
                 if (i < (fields.Length - 1))
                 {
-                    obj = field.GetValue(obj);
+                    if (arrayIndex >= 0)
+                    {
+                        IList elems = field.GetValue(obj) as IList;
+                        obj = elems[arrayIndex];
+                    }
+                    else
+                    {
+                        obj = field.GetValue(obj);
+                    }
+
                     if (obj == null)
-                        LogFormat("Could not retrieve object from field {0} in type {1}", fields[i], type.Name);
+                        BadMod("Could not retrieve object from field {0} in type {1}", fieldString, type.Name);
                     type = obj.GetType();
                 }
                 else
                 {
-                    AssignField(obj, field, mod.value);
+                    if (arrayIndex >= 0)
+                        AssignArrayElement(obj, field, arrayIndex, mod.value);
+                    else
+                        AssignField(obj, field, mod.value);
                 }
             }
         }
 
-        public void LogFormat(string s, params object[] args)
+        public string DecomposeArray(string fieldString, out int index)
         {
-            string prefix = string.Format("PPDefModifier: {0}: ", fileName_);
-            string rest = string.Format(s, args);
-            Debug.Log(prefix + rest);
+            int start = fieldString.IndexOf('[');
+            if (start < 0)
+            {
+                index = -1;
+                return fieldString;
+            }
+
+            int end = fieldString.IndexOf(']');
+            if (end < 0)
+            {
+                BadMod("Bad array element specifier: missing ']'");
+            }
+
+            if (!Int32.TryParse(fieldString.Substring(start + 1, end - start - 1), out index))
+            {
+                BadMod("Bad array index: not an integer");
+            }
+
+            if (index < 0)
+            {
+                BadMod("Bad array index: must be a positive integer");
+            }
+            return fieldString.Substring(0, start);
         }
 
         public void AssignField(System.Object obj, FieldInfo field, double value)
         {
             Type fieldType = field.FieldType;
+
             if (!fieldType.IsPrimitive)
             {
-                LogFormat("Field {0} does not have primitive type", field.Name);
-                return;
+                BadMod("Field {0} does not have primitive type", field.Name);
             }
 
             // Try to convert the value from the file into the type of the field. This may fail.
@@ -203,10 +239,78 @@ namespace PPDefModifier
             }
             catch (Exception)
             {
-                LogFormat("Error converting value to type {0} of field {1}", fieldType.Name, field.Name);
+                BadMod("Error converting value to type {0} of field {1}", fieldType.Name, field.Name);
             }
         }
 
+        public void AssignArrayElement(System.Object obj, FieldInfo field, int arrayIndex, double value)
+        {
+            Type fieldType = field.FieldType;
+
+            if (!fieldType.IsArray)
+            {
+                BadMod("Field {0} does not have array type", field.Name);
+            }
+
+            fieldType = fieldType.GetElementType();
+
+            try
+            {
+                Array elems = field.GetValue(obj) as Array;
+                System.Object converted = Convert.ChangeType(value, fieldType);
+                elems.SetValue(converted, arrayIndex);
+                field.SetValue(obj, elems);
+            }
+            catch (Exception)
+            {
+                BadMod("Error converting value to type {0} of field {1}", fieldType.Name, field.Name);
+            }
+        }
+
+        private void BadMod(string s, params object[] args)
+        {
+            string prefix = string.Format("PPDefModifier: {0}: ", fileName_);
+            string rest = string.Format(s, args);
+            throw new ModException(prefix + rest);
+        }
+
         private string fileName_ { get; set; }
+        private IDefRepository repo_ { get; set; }
     }
+
+    internal interface IDefRepository
+    {
+        object GetDef(string guid);
+    }
+
+    internal class PPDefRepository : IDefRepository
+    {
+        public PPDefRepository(DefRepository repo)
+        {
+            this.repo = repo;
+        }
+        public object GetDef(string guid)
+        {
+            return repo.GetDef(guid);
+        }
+
+        DefRepository repo { get; set; }
+    }
+
+
+    public class ModException : Exception
+    {
+        public ModException(string fmt, params object[] args)
+        {
+            str = String.Format(fmt, args);
+        }
+
+        public override string ToString()
+        {
+            return str;
+        }
+
+        private string str;
+    }
+
 }

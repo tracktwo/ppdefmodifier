@@ -35,7 +35,7 @@ First because it's easier - you don't need VS or to know how to build a C# proje
 
 This mod requires the [Phoenix Point Mod Injector](https://github.com/RealityMachina/PhoenixPointModInjector). Install this first.
 
-Copy `PPDefModifier.dll` to your `Mods` folder created by the Mod Injector. Create a `PPDefModifier.json` configuration file in this same folder, next to the DLL. This file describes the changes you want to make. See below for the configuration file format and some sample fields.
+Copy `PPDefModifier.dll` to your `Mods` folder created by the Mod Injector. Create a `PPDefModifier` directory in the `Mods` directory, and place one or more configuration files in this folder. These configuration file(s) describe the changes you want to make. See below for the configuration file format and some sample fields. The configuration files must be json files with the extension `.json`.
 
 # Quickstart configuration
 
@@ -118,7 +118,7 @@ The highlighted lines are the ones that you need to build the mod config. The fi
     "value": 8,
     "comment": "Optional string describing this mod"
 }
-````
+```
 
 # Configuration File Format Reference
 
@@ -126,25 +126,33 @@ Mod configuration files are json files. This mod will read all .json files in th
 
 Each configuration file must contain an array defining the mod objects. Each mod in the array has the following fields:
 
-### guid
+## guid
 
 The `guid` field is necessary when making a change to a game object that is implemented as an asset and should be set to a string containing the guid of the definition. See below for a guide on how to read the assets and find entries you may be looking for.
 
 Exactly one of `guid` or `cls` must be in each mod.
 
-### cls
+## cls
 
 The `cls` field is necessary when making a change to a game value that is not stored as an asset, e.g. the flag that disables the console. The `cls` field should be a fully-qualified class name with all namespaces. The `field` field of the mod should name a static field of this class that you wish to change.
 
-### field
+## field
 
 The `field` field specifies the name of the field to change and should name a field of some primitive type (e.g. an integer, float, or boolean value). Handling other values (such as references to other assets) will hopefully come soon. For `cls` type mods `field` should name a static member of the class. For `guid` type mods it does not need to be static.
 
-### Value
+### Field Names
+
+The field is specified as a dot-separated list of names. The names correspond to the names of the members within the def specified by the guid. For example, "BaseStats.SpaceForUnits" indicates the field `SpaceForUnits` within the class-type member named `BaseStats` within the guid def. These names can be constructed from a dump from AssetStudio by looking at the indention level of the names. When the name of the field you want to modify is indented you must look back up in the dump to find the parent object's name. This may in turn be nested within another object, etc.
+
+### Arrays
+
+Array-type fields are supported and can be named with the syntax `[N]` where `N` is a constant number. For example, the field `DamagePayload.DamageKeywords[0].Value` would name the `Value` field within the first element of the `DamageKeywords` array in the `DamagePayload` object for the def specified by the guid.
+
+## Value
 
 The new number to set the field to. Booleans can be specified as 1 (true) or 0 (false).
 
-### Comment
+## Comment
 
 An optional field used to describe the mod, since json does not support comments. Especially useful for guid mods to describe what the guid refers to.
 
