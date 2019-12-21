@@ -312,6 +312,61 @@ namespace PPDefModifierTests
             Assert.ThrowsException<ModException>(() => m.ApplyModifier(mod));
         }
 
+        class NestedStruct
+        {
+            public struct Nested
+            {
+                public int Value;
+
+                public struct Further
+                {
+                    public int Value2;
+                }
+
+                public Further further;
+            }
+
+            public Nested nested;
+            public Nested[] nestedArray;
+        }
+
+        [TestMethod]
+        public void TestStructMember()
+        {
+            MockRepo repo = new MockRepo();
+            NestedStruct obj = new NestedStruct { nested = new NestedStruct.Nested { Value = 0 } };
+            repo.AddDef("a", obj);
+            ModFile m = new ModFile("NestedStruct", repo);
+            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nested.Value", value = 10 };
+            m.ApplyModifier(mod);
+            Assert.AreEqual(10, obj.nested.Value);
+        }
+
+        [TestMethod]
+        public void TestStructInStruct()
+        {
+            MockRepo repo = new MockRepo();
+            NestedStruct obj = new NestedStruct { nested = new NestedStruct.Nested { further = new NestedStruct.Nested.Further { Value2 = 7 } } };
+            repo.AddDef("a", obj);
+            ModFile m = new ModFile("StructInStruct", repo);
+            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nested.further.Value2", value = 10 };
+            m.ApplyModifier(mod);
+            Assert.AreEqual(10, obj.nested.further.Value2);
+        }
+
+        [TestMethod]
+        public void TestStructArray()
+        {
+            MockRepo repo = new MockRepo();
+            NestedStruct obj = new NestedStruct { nestedArray = new NestedStruct.Nested[2] { new NestedStruct.Nested { Value = 7 }, new NestedStruct.Nested { Value = 8 } } };
+            repo.AddDef("a", obj);
+            ModFile m = new ModFile("NestedStructArray", repo);
+            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nestedArray[1].Value", value = 10 };
+            m.ApplyModifier(mod);
+            Assert.AreEqual(7, obj.nestedArray[0].Value);
+            Assert.AreEqual(10, obj.nestedArray[1].Value);
+        }
+
     }
 }
 

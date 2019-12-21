@@ -124,6 +124,8 @@ namespace PPDefModifier
         public void ApplyModifier(ModifierDefinition mod)
         {
             System.Object obj = null;
+            System.Object parent = null;
+            int parentArrayIndex = -1;
             Type type = null;
 
             // Try to find the def if we have a guid
@@ -174,16 +176,29 @@ namespace PPDefModifier
                     if (arrayIndex >= 0)
                     {
                         IList elems = field.GetValue(obj) as IList;
+                        parent = elems;
+                        parentArrayIndex = arrayIndex;
                         obj = elems[arrayIndex];
                     }
                     else
                     {
+                        parent = obj;
                         obj = field.GetValue(obj);
+                        parentArrayIndex = -1;
                     }
 
                     if (obj == null)
                         BadMod("Could not retrieve object from field {0} in type {1}", fieldString, type.Name);
                     type = obj.GetType();
+
+                    // If the element we are looking at in the field list is a value type then 'obj' is a boxed copy of the value in the repo. We can change it,
+                    // but any changes need to be pushed back into the containing object. Record this in a stack of pending copies to make after we're done. These
+                    // will be applied after we have finished changing the value and record the value type object (obj), its field info, it's parent object, and
+                    // the array index within that parent if it was an array.
+                    if (type.IsValueType)
+                    {
+                        valueTypeStack.Insert(0, new ValueTypeElement { field = field, obj = parent, value = obj, arrayIndex = parentArrayIndex });
+                    }
                 }
                 else
                 {
@@ -191,6 +206,20 @@ namespace PPDefModifier
                         AssignArrayElement(obj, field, arrayIndex, mod.value);
                     else
                         AssignField(obj, field, mod.value);
+                }
+            }
+
+            // Copy all pending value type objects back into their parents.
+            foreach (var v in valueTypeStack)
+            {
+                if (v.arrayIndex >= 0)
+                {
+                    Array elems = v.obj as Array;
+                    elems.SetValue(v.value, v.arrayIndex);
+                }
+                else
+                {
+                    v.field.SetValue(v.obj, v.value);
                 }
             }
         }
@@ -276,6 +305,17 @@ namespace PPDefModifier
 
         private string fileName_ { get; set; }
         private IDefRepository repo_ { get; set; }
+
+        private List<ValueTypeElement> valueTypeStack = new List<ValueTypeElement>();
+
+        class ValueTypeElement
+        {
+            public FieldInfo field;
+            public object obj;
+            public object value;
+            public int arrayIndex = -1;
+        }
+
     }
 
     internal interface IDefRepository
