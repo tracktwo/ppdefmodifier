@@ -328,6 +328,7 @@ namespace PPDefModifierTests
 
             public Nested nested;
             public Nested[] nestedArray;
+            public List<Nested> nestedList;
         }
 
         [TestMethod]
@@ -365,6 +366,19 @@ namespace PPDefModifierTests
             m.ApplyModifier(mod);
             Assert.AreEqual(7, obj.nestedArray[0].Value);
             Assert.AreEqual(10, obj.nestedArray[1].Value);
+        }
+
+        [TestMethod]
+        public void TestStructList()
+        {
+            MockRepo repo = new MockRepo();
+            NestedStruct obj = new NestedStruct { nestedList = new List<NestedStruct.Nested> { new NestedStruct.Nested { Value = 7 }, new NestedStruct.Nested { Value = 8 } } };
+            repo.AddDef("a", obj);
+            ModFile m = new ModFile("NestedStructList", repo);
+            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nestedList[1].Value", value = 10 };
+            m.ApplyModifier(mod);
+            Assert.AreEqual(7, obj.nestedList[0].Value);
+            Assert.AreEqual(10, obj.nestedList[1].Value);
         }
 
     }

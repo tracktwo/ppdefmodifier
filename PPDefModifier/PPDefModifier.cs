@@ -214,8 +214,8 @@ namespace PPDefModifier
             {
                 if (v.arrayIndex >= 0)
                 {
-                    Array elems = v.obj as Array;
-                    elems.SetValue(v.value, v.arrayIndex);
+                    IList elems = v.obj as IList;
+                    elems[v.arrayIndex] = v.value;
                 }
                 else
                 {
