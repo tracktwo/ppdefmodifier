@@ -21,7 +21,7 @@ namespace PPDefModifier
         public string guid;
         public string cls;
         public string field;
-        public double value;
+        public object value;
         public string comment;
     }
 
@@ -97,7 +97,7 @@ namespace PPDefModifier
             }
             catch (Exception e)
             {
-                BadMod("PPDefModifier: Caught exception during json read or parse: {0}", e.ToString());
+                Debug.LogFormat("PPDefModifier: Caught exception during mod application: {0}", e.ToString());
             }
         }
 
@@ -251,14 +251,9 @@ namespace PPDefModifier
             return fieldString.Substring(0, start);
         }
 
-        public void AssignField(System.Object obj, FieldInfo field, double value)
+        public void AssignField(System.Object obj, FieldInfo field, object value)
         {
             Type fieldType = field.FieldType;
-
-            if (!fieldType.IsPrimitive)
-            {
-                BadMod("Field {0} does not have primitive type", field.Name);
-            }
 
             // Try to convert the value from the file into the type of the field. This may fail.
             try
@@ -272,7 +267,7 @@ namespace PPDefModifier
             }
         }
 
-        public void AssignArrayElement(System.Object obj, FieldInfo field, int arrayIndex, double value)
+        public void AssignArrayElement(System.Object obj, FieldInfo field, int arrayIndex, object value)
         {
             Type fieldType = field.FieldType;
 

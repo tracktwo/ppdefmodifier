@@ -33,6 +33,7 @@ namespace PPDefModifierTests
             public int intValue;
             public double doubleValue;
             public bool boolValue;
+            public string stringValue;
 
             public class Nested
             {
@@ -87,6 +88,18 @@ namespace PPDefModifierTests
             ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "boolValue", value = 1 };
             m.ApplyModifier(mod);
             Assert.IsTrue(obj.boolValue);
+        }
+
+        [TestMethod]
+        public void TestSimpleString()
+        {
+            MockRepo repo = new MockRepo();
+            TestClass obj = new TestClass { stringValue = "foo" };
+            repo.AddDef("a", obj);
+            ModFile m = new ModFile("SimpleString", repo);
+            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "stringValue", value = "bar" };
+            m.ApplyModifier(mod);
+            Assert.AreEqual(obj.stringValue, "bar");
         }
 
         [TestMethod]
