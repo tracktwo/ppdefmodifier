@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PPDefModifier;
+using System.Collections.Generic;
 
 namespace PPDefModifierTests
 {
@@ -20,6 +21,15 @@ namespace PPDefModifierTests
         {
             ModFile m = new ModFile("BothGuidAndClass", null);
             ModifierDefinition def = new ModifierDefinition { guid = "a", cls = "b", comment = null, value = 0, field = null };
+            Assert.ThrowsException<ModException>(() => m.ValidateModifier(def));
+        }
+
+
+        [TestMethod]
+        public void BothFieldAndModletlist()
+        {
+            ModFile m = new ModFile("BothFieldAndModletlist", null);
+            ModifierDefinition def = new ModifierDefinition { guid = null, cls = "c", comment = null, value = 0, field = "foo", modletlist = new List<ModletStep>() };
             Assert.ThrowsException<ModException>(() => m.ValidateModifier(def));
         }
 

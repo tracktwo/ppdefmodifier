@@ -394,6 +394,48 @@ namespace PPDefModifierTests
             Assert.AreEqual(10, obj.nestedList[1].Value);
         }
 
+        [TestMethod]
+        public void TestModletList()
+        {
+            MockRepo repo = new MockRepo();
+            TestClass obj = new TestClass { intValue = 10, boolValue = false };
+            repo.AddDef("a", obj);
+            ModFile m = new ModFile("ModletList", repo);
+            ModifierDefinition mod = new ModifierDefinition {
+                guid = "a",
+                modletlist = new List<ModletStep> {
+                    new ModletStep { field = "intValue", value = 20 },
+                    new ModletStep { field = "boolValue", value = true}
+                }
+            };
+            m.ApplyModifier(mod);
+            Assert.AreEqual(obj.intValue, 20);
+            Assert.IsTrue(obj.boolValue);
+        }
+
+        [TestMethod]
+        public void TestModletListWithMalformedSteps()
+        {
+            MockRepo repo = new MockRepo();
+            TestClass obj = new TestClass { intValue = 10, boolValue = false };
+            repo.AddDef("a", obj);
+            ModFile m = new ModFile("ModletList", repo);
+            ModifierDefinition mod = new ModifierDefinition
+            {
+                guid = "a",
+                modletlist = new List<ModletStep> {
+                    new ModletStep { field = "intValue", value = 20 },
+                    new ModletStep { field = null, value = 20 },
+                    new ModletStep { field = "NoValue", value = null },
+                    new ModletStep { field = null, value = null },
+                    new ModletStep { field = "boolValue", value = true}
+                }
+            };
+            m.ApplyModifier(mod);
+            Assert.AreEqual(obj.intValue, 20);
+            Assert.IsTrue(obj.boolValue);
+        }
+
     }
 }
 
