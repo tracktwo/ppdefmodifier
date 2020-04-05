@@ -18,6 +18,7 @@ Many game constants can be changed by this mod. Some examples are:
 - Equipment values like armor values, magazine sizes, etc.
 - Difficulty level settings, such as whether or not new recuits come with equipment.
 - Enabling/disabling the console
+- Localization strings
 
 ## What cannot be changed?
 
@@ -41,11 +42,13 @@ Copy `PPDefModifier.dll` to your `Mods` folder created by the Mod Injector. Crea
 
 For the mod to do anything you must provide one or more config files that list the changes you want to apply to the game. The mod will read all .json files in a folder named `PPDefModifier` in the `Mods` folder, including those in other subdirectories, applying all mods found in each file. This is the preferred mechanism to write mods that are small and easy to share. For backward compatibility with the first release the mod will also read a file named `PPDefModifier.json` in the `Mods` directory if it exists.
 
-Each config file may contain a list of mods to apply, where each one has:
+Each config file may contain a list of mods to apply. Each mod contains:
 
 - Either a guid for the asset to change or the class name of a static field to change
 - The name of the field you want to change within that asset or class
 - The new value you want to set for this field
+
+When changing more than one value in a single def or class, you can instead use a `modletlist` to specify multiple fields and values instead of `field` or `value`. The `modletlist` is an array of objects, each containing a field and value.
 
 ## Sample file
 
@@ -62,17 +65,33 @@ Each config file may contain a list of mods to apply, where each one has:
         "field": "BaseStats.SpaceForUnits",
         "value": 8,
         "comment": "Set Manticore carrying capacity to 8"
-    }
+    },
+    {
+        "guid": "b0011318-4762-27d1-3ada-e10fa2d4ab34",
+        "modletlist": [
+            {
+                "field": "SoldiersCapacity",
+                "value": 12
+            },
+            {
+                "field": "ItemsCapacity",
+                "value": 36,
+            },
+        ],
+        "comment": "LivingQuarters: Sets soldier capacity to 12 and item capacity to 36"
+    },
 ]
 ```
 
-This example file contains two mods:
+This example file contains three mods:
 
 The first enables console access by changing the value of the static field `DisableConsoleAccess` within the class `Base.Utils.GameConsole.GameConsoleWindow` to `false` (0).
 
 The second entry changes the carrying capacity of the Manticore to 8 soldiers. The Manticore is identified by the guid `"228f2cd8-8ca2-4224-ead6-c9c684f52172"`, and the carrying capacity is within the `BaseStats` struct in a field named `SpaceForUnits`.
 
-Each mod needs one of either `cls` or `guid`. `value` and `field` are required in all mods. `comment` is optional and allows you to provide a human-readable description of the mod, especially useful for guids.
+The final changes the Living Quarters facility to have capacity for 12 soldiers and 36 items. This example shows the use of `modletlist` to change two different fields within the same def. This can save a little space instead of needing to repeat the `guid` multiple times.
+
+Each mod needs one of either `cls` or `guid`. Either `modletlist` or both `value` and `field` are required in all mods. `comment` is optional and allows you to provide a human-readable description of the mod, especially useful for guids.
 
 If you are unfamiliar with Json: When building your own configuration file the square brackets `[` and `]` are needed, even when writing only one mod. Each mod definition goes in curly braces `{` `}`, and are separated by commas. There should be no comma after the last entry before the closing `]`. It may be helpful to paste the file into a Json validator (available online) to make sure it's a valid json file.
 
@@ -138,7 +157,7 @@ The `cls` field is necessary when making a change to a game value that is not st
 
 ## field
 
-The `field` field specifies the name of the field to change and should name a field of some primitive type (e.g. an integer, float, or boolean value). Handling other values (such as references to other assets) will hopefully come soon. For `cls` type mods `field` should name a static member of the class. For `guid` type mods it does not need to be static.
+The `field` field specifies the name of the field to change and should name a field of some primitive type (e.g. an integer, float, or boolean value) or a string. Handling other values (such as references to other assets) will hopefully come soon. For `cls` type mods `field` should name a static member of the class. For `guid` type mods it does not need to be static.
 
 ### Field Names
 
@@ -155,6 +174,11 @@ The new number to set the field to. Booleans can be specified as 1 (true) or 0 (
 ## Comment
 
 An optional field used to describe the mod, since json does not support comments. Especially useful for guid mods to describe what the guid refers to.
+
+## Modletlist
+
+If more than one change is needed in a single `cls` or `guid`, you can combine them in a `modletlist` instead of specifying a full mod block for each change and repeating the guid or class in each. `modletlist` is used instead of `field` and `value`, and is an array of objects containing both `field` and `value`. The mod will apply the changes specified in each
+element of the modletlist.
 
 # Future Work
 
