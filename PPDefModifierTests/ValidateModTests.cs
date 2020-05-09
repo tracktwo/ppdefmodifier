@@ -11,51 +11,45 @@ namespace PPDefModifierTests
         [TestMethod]
         public void NoGuid()
         {
-            ModFile m = new ModFile("NoGuid", null);
-            ModifierDefinition def = new ModifierDefinition { guid = null, cls = null, comment = null, value = 0, field = null };
-            Assert.ThrowsException<ModException>(() => m.ValidateModifier(def));
+            ModDefinition def = new ModDefinition { guid = null, cls = null, comment = null, value = 0, field = null };
+            Assert.ThrowsException<ModException>(() => new Mod("NoGuid", def, null).Validate());
         }
 
         [TestMethod]
         public void BothGuidAndCls()
         {
-            ModFile m = new ModFile("BothGuidAndClass", null);
-            ModifierDefinition def = new ModifierDefinition { guid = "a", cls = "b", comment = null, value = 0, field = null };
-            Assert.ThrowsException<ModException>(() => m.ValidateModifier(def));
+            ModDefinition def = new ModDefinition { guid = "a", cls = "b", comment = null, value = 0, field = null };
+            Assert.ThrowsException<ModException>(() => new Mod("BothGuidAndClass", def, null).Validate());
         }
 
 
         [TestMethod]
         public void BothFieldAndModletlist()
         {
-            ModFile m = new ModFile("BothFieldAndModletlist", null);
-            ModifierDefinition def = new ModifierDefinition { guid = null, cls = "c", comment = null, value = 0, field = "foo", modletlist = new List<ModletStep>() };
-            Assert.ThrowsException<ModException>(() => m.ValidateModifier(def));
+            ModDefinition def = new ModDefinition { guid = null, cls = "c", comment = null, value = 0, field = "foo", modletlist = new List<ModletStep>() };
+            Assert.ThrowsException<ModException>(() => new Mod("BothFieldAndModletList", def, null).Validate());
         }
 
 
         [TestMethod]
         public void NoField()
         {
-            ModFile m = new ModFile("NoField", null);
-            ModifierDefinition def = new ModifierDefinition { guid = "a", cls = null, comment = null, value = 0, field = null };
-            Assert.ThrowsException<ModException>(() => m.ValidateModifier(def));
+            ModDefinition def = new ModDefinition { guid = "a", cls = null, comment = null, value = 0, field = null };
+            Assert.ThrowsException<ModException>(() => new Mod("NoField", def, null).Validate());
         }
 
         [TestMethod]
         public void ValidGuid()
         {
-            ModFile m = new ModFile("ValidGuid", null);
-            ModifierDefinition def = new ModifierDefinition { guid = "a", cls = null, comment = null, value = 0, field = "foo" };
-            m.ValidateModifier(def);
+            ModDefinition def = new ModDefinition { guid = "a", cls = null, comment = null, value = 0, field = "foo" };
+            new Mod("ValidGuid", def, null).Validate();
         }
 
         [TestMethod]
         public void ValidCls()
         {
-            ModFile m = new ModFile("ValidGuid", null);
-            ModifierDefinition def = new ModifierDefinition { guid = null, cls = "c", comment = null, value = 0, field = "foo" };
-            m.ValidateModifier(def);
+            ModDefinition def = new ModDefinition { guid = null, cls = "c", comment = null, value = 0, field = "foo" };
+            new Mod("ValidCls", def, null).Validate();
         }
 
     }

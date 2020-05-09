@@ -34,9 +34,15 @@ First because it's easier - you don't need VS or to know how to build a C# proje
 
 # Installation
 
-This mod requires the [Phoenix Point Mod Injector](https://github.com/RealityMachina/PhoenixPointModInjector). Install this first.
+This mod requires a Phoenix Point mod loader. Both [Modnix](https://github.com/Sheep-y/Modnix) and the [Phoenix Point Mod Injector](https://github.com/RealityMachina/PhoenixPointModInjector) are supported. Install one of these first.
 
-Copy `PPDefModifier.dll` to your `Mods` folder created by the Mod Injector. Create a `PPDefModifier` directory in the `Mods` directory, and place one or more configuration files in this folder. These configuration file(s) describe the changes you want to make. See below for the configuration file format and some sample fields. The configuration files must be json files with the extension `.json`.
+## Modnix Installation
+
+In the Mods tab of Modnix click the `Add Mod` button and select the downloaded PPDefModifier zip file. The PPDefModifier folder is created automatically, and can be reached by clicking the `Mods Folder` button in Modnix to add configuration files.
+
+## Phoenix Point Mod Injector Installation
+
+Open the downloaded PPDefModifier.zip file and copy `PPDefModifier.dll` to your `Mods` folder created by the Mod Injector. Create a `PPDefModifier` directory in the `Mods` directory (or copy the empty one from the zip file).
 
 # Quickstart configuration
 

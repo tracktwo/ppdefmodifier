@@ -28,6 +28,18 @@ namespace PPDefModifierTests
             private Dictionary<String, Object> dict = new Dictionary<String,Object>();
         }
 
+        public class MockLogger : ILogger
+        {
+            public void Error(string msg, params object[] args)
+            {
+            }
+
+            public void Log(string msg, params object[] args)
+            {
+            }
+        }
+
+
         public class TestClass
         {
             public int intValue;
@@ -60,9 +72,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { intValue = 10 };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("SimpleInt", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "intValue", value = 5 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "intValue", value = 5 };
+            new Mod("SimpleInt", mod, repo).Apply();
             Assert.AreEqual(obj.intValue, 5);
         }
 
@@ -72,9 +83,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { doubleValue = 20.0 };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("SimpleDouble", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "doubleValue", value = 50.0 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "doubleValue", value = 50.0 };
+            new Mod("SimpleDouble", mod, repo).Apply();
             Assert.AreEqual(obj.doubleValue, 50.0);
         }
 
@@ -84,9 +94,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { boolValue = false };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("SimpleBool", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "boolValue", value = 1 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "boolValue", value = 1 };
+            new Mod("SimpleBool", mod, repo).Apply();
             Assert.IsTrue(obj.boolValue);
         }
 
@@ -96,9 +105,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { stringValue = "foo" };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("SimpleString", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "stringValue", value = "bar" };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "stringValue", value = "bar" };
+            new Mod("SimpleString", mod, repo).Apply();
             Assert.AreEqual(obj.stringValue, "bar");
         }
 
@@ -108,9 +116,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { nested = new TestClass.Nested { intValue = 0 } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("NestedInt", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nested.intValue", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "nested.intValue", value = 10 };
+            new Mod("NestedInt", mod, repo).Apply();
             Assert.AreEqual(obj.nested.intValue, 10);
         }
 
@@ -120,9 +127,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { nested = new TestClass.Nested { anotherNest = new TestClass.Nested.AnotherNest { intValue = 0 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("DoubleNestedInt", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nested.anotherNest.intValue", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "nested.anotherNest.intValue", value = 10 };
+            new Mod("DoubleNestedInt", mod, repo).Apply();
             Assert.AreEqual(obj.nested.anotherNest.intValue, 10);
         }
 
@@ -132,9 +138,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { nested = new TestClass.Nested { anotherNest = new TestClass.Nested.AnotherNest { intValue = 0 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("WrongGuid", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "b", field = "nested.anotherNest.intValue", value = 10 };
-            Assert.ThrowsException<ArgumentException>(() => m.ApplyModifier(mod));
+            ModDefinition mod = new ModDefinition { guid = "b", field = "nested.anotherNest.intValue", value = 10 };
+            Assert.ThrowsException<ArgumentException>(() => new Mod("WrongGuid", mod, repo).Apply());
         }
 
         [TestMethod]
@@ -143,9 +148,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { nested = new TestClass.Nested { anotherNest = new TestClass.Nested.AnotherNest { intValue = 0 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("BadField", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "wrong", value = 10 };
-            Assert.ThrowsException<ModException>(() => m.ApplyModifier(mod));
+            ModDefinition mod = new ModDefinition { guid = "a", field = "wrong", value = 10 };
+            Assert.ThrowsException<ModException>(() => new Mod("BadField", mod, repo).Apply());
         }
 
         [TestMethod]
@@ -154,9 +158,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { nested = new TestClass.Nested { anotherNest = new TestClass.Nested.AnotherNest { intValue = 0 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("NonPrimitiveField", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nested", value = 10 };
-            Assert.ThrowsException<ModException>(() => m.ApplyModifier(mod));
+            ModDefinition mod = new ModDefinition { guid = "a", field = "nested", value = 10 };
+            Assert.ThrowsException<ModException>(() => new Mod("NonPrimitiveField", mod, repo).Apply());
         }
 
         [TestMethod]
@@ -166,9 +169,8 @@ namespace PPDefModifierTests
             TestClass obj = new TestClass { };
             TestClass.Nested.staticIntValue = 0;
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("StaticInt", repo);
-            ModifierDefinition mod = new ModifierDefinition { cls = "PPDefModifierTests.ApplyModTests+TestClass+Nested, PPDefModifierTests", field = "staticIntValue", value = 5 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { cls = "PPDefModifierTests.ApplyModTests+TestClass+Nested, PPDefModifierTests", field = "staticIntValue", value = 5 };
+            new Mod("StaticInt", mod, repo).Apply();
             Assert.AreEqual(TestClass.Nested.staticIntValue, 5);
         }
 
@@ -191,9 +193,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { arr = new ArrayTestClass.Nested[3] { new ArrayTestClass.Nested { value = 7 }, new ArrayTestClass.Nested { value = 8 }, new ArrayTestClass.Nested { value = 9 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("FirstArray", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[0].value", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[0].value", value = 10 };
+            new Mod("FirstArray", mod, repo).Apply();
             Assert.AreEqual(obj.arr[0].value, 10);
             Assert.AreEqual(obj.arr[1].value, 8);
             Assert.AreEqual(obj.arr[2].value, 9);
@@ -205,9 +206,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { arr = new ArrayTestClass.Nested[3] { new ArrayTestClass.Nested { value = 7 }, new ArrayTestClass.Nested { value = 8 } , new ArrayTestClass.Nested { value = 9 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("Array", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[1].value", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[1].value", value = 10 };
+            new Mod("Array", mod, repo).Apply();
             Assert.AreEqual(obj.arr[0].value, 7);
             Assert.AreEqual(obj.arr[1].value, 10);
             Assert.AreEqual(obj.arr[2].value, 9);
@@ -219,9 +219,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { arr = new ArrayTestClass.Nested[3] { new ArrayTestClass.Nested { value = 7 }, new ArrayTestClass.Nested { value = 8 }, new ArrayTestClass.Nested { value = 9 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("LastArray", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[2].value", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[2].value", value = 10 };
+            new Mod("LastArray", mod, repo).Apply();
             Assert.AreEqual(obj.arr[0].value, 7);
             Assert.AreEqual(obj.arr[1].value, 8);
             Assert.AreEqual(obj.arr[2].value, 10);
@@ -233,9 +232,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { values = new double[3] { 7.0, 8.0, 9.0 } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("FirstArrayValue", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "values[0]", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "values[0]", value = 10 };
+            new Mod("FirstArrayValue", mod, repo).Apply();
             Assert.AreEqual(obj.values[0], 10.0);
             Assert.AreEqual(obj.values[1], 8.0);
             Assert.AreEqual(obj.values[2], 9.0);
@@ -247,9 +245,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { values = new double[3] { 7.0, 8.0, 9.0 } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("FirstArrayValue", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "values[2]", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "values[2]", value = 10 };
+            new Mod("LastArrayValue", mod, repo).Apply();
             Assert.AreEqual(obj.values[0], 7.0);
             Assert.AreEqual(obj.values[1], 8.0);
             Assert.AreEqual(obj.values[2], 10.0);
@@ -264,9 +261,8 @@ namespace PPDefModifierTests
                 new ArrayTestClass.Nested { nestedValues = new double[3] { 17.0, 18.0, 19.0 } },
                 new ArrayTestClass.Nested { nestedValues = new double[4] { 27.0, 28.0, 29.0, 30.0 } } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("FirstArrayValue", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[0].nestedValues[1]", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[0].nestedValues[1]", value = 10 };
+            new Mod("MultiArrayValues", mod, repo).Apply();
             Assert.AreEqual(obj.arr[0].nestedValues[1], 10.0);
         }
 
@@ -276,9 +272,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { arr = new ArrayTestClass.Nested[3] { new ArrayTestClass.Nested { value = 7 }, new ArrayTestClass.Nested { value = 8 }, new ArrayTestClass.Nested { value = 9 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("OutOfBound", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[3].value", value = 10 };
-            Assert.ThrowsException<IndexOutOfRangeException> (() => m.ApplyModifier(mod));
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[3].value", value = 10 };
+            Assert.ThrowsException<IndexOutOfRangeException> (() => new Mod("OutOfBound", mod, repo).Apply());
         }
 
         [TestMethod]
@@ -287,9 +282,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { arr = new ArrayTestClass.Nested[3] { new ArrayTestClass.Nested { value = 7 }, new ArrayTestClass.Nested { value = 8 }, new ArrayTestClass.Nested { value = 9 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("NegativeIndex", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[-1].value", value = 10 };
-            Assert.ThrowsException<ModException>(() => m.ApplyModifier(mod));
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[-1].value", value = 10 };
+            Assert.ThrowsException<ModException>(() => new Mod("NegativeIndex", mod, repo).Apply());
         }
 
         [TestMethod]
@@ -298,9 +292,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { arr = new ArrayTestClass.Nested[3] { new ArrayTestClass.Nested { value = 7 }, new ArrayTestClass.Nested { value = 8 }, new ArrayTestClass.Nested { value = 9 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("NonIntIndex", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[1.0].value", value = 10 };
-            Assert.ThrowsException<ModException>(() => m.ApplyModifier(mod));
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[1.0].value", value = 10 };
+            Assert.ThrowsException<ModException>(() => new Mod("NonIntIndex", mod, repo).Apply());
         }
 
         [TestMethod]
@@ -309,9 +302,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { arr = new ArrayTestClass.Nested[3] { new ArrayTestClass.Nested { value = 7 }, new ArrayTestClass.Nested { value = 8 }, new ArrayTestClass.Nested { value = 9 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("NonNumberIndex", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[foo].value", value = 10 };
-            Assert.ThrowsException<ModException>(() => m.ApplyModifier(mod));
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[foo].value", value = 10 };
+            Assert.ThrowsException<ModException>(() => new Mod("NonNumberIndex", mod, repo).Apply());
         }
 
         [TestMethod]
@@ -320,9 +312,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             ArrayTestClass obj = new ArrayTestClass { arr = new ArrayTestClass.Nested[3] { new ArrayTestClass.Nested { value = 7 }, new ArrayTestClass.Nested { value = 8 }, new ArrayTestClass.Nested { value = 9 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("BadBracket", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "arr[.value", value = 10 };
-            Assert.ThrowsException<ModException>(() => m.ApplyModifier(mod));
+            ModDefinition mod = new ModDefinition { guid = "a", field = "arr[.value", value = 10 };
+            Assert.ThrowsException<ModException>(() => new Mod("BadBracket", mod, repo).Apply());
         }
 
         class NestedStruct
@@ -350,9 +341,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             NestedStruct obj = new NestedStruct { nested = new NestedStruct.Nested { Value = 0 } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("NestedStruct", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nested.Value", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "nested.Value", value = 10 };
+            new Mod("NestedStruct", mod, repo).Apply();
             Assert.AreEqual(10, obj.nested.Value);
         }
 
@@ -362,9 +352,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             NestedStruct obj = new NestedStruct { nested = new NestedStruct.Nested { further = new NestedStruct.Nested.Further { Value2 = 7 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("StructInStruct", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nested.further.Value2", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "nested.further.Value2", value = 10 };
+            new Mod("StructInStruct", mod, repo).Apply();
             Assert.AreEqual(10, obj.nested.further.Value2);
         }
 
@@ -374,9 +363,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             NestedStruct obj = new NestedStruct { nestedArray = new NestedStruct.Nested[2] { new NestedStruct.Nested { Value = 7 }, new NestedStruct.Nested { Value = 8 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("NestedStructArray", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nestedArray[1].Value", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "nestedArray[1].Value", value = 10 };
+            new Mod("NestedStructArray", mod, repo).Apply();
             Assert.AreEqual(7, obj.nestedArray[0].Value);
             Assert.AreEqual(10, obj.nestedArray[1].Value);
         }
@@ -387,9 +375,8 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             NestedStruct obj = new NestedStruct { nestedList = new List<NestedStruct.Nested> { new NestedStruct.Nested { Value = 7 }, new NestedStruct.Nested { Value = 8 } } };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("NestedStructList", repo);
-            ModifierDefinition mod = new ModifierDefinition { guid = "a", field = "nestedList[1].Value", value = 10 };
-            m.ApplyModifier(mod);
+            ModDefinition mod = new ModDefinition { guid = "a", field = "nestedList[1].Value", value = 10 };
+            new Mod("NestedStructList", mod, repo).Apply();
             Assert.AreEqual(7, obj.nestedList[0].Value);
             Assert.AreEqual(10, obj.nestedList[1].Value);
         }
@@ -400,15 +387,15 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { intValue = 10, boolValue = false };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("ModletList", repo);
-            ModifierDefinition mod = new ModifierDefinition {
+            ModDefinition mod = new ModDefinition {
                 guid = "a",
                 modletlist = new List<ModletStep> {
                     new ModletStep { field = "intValue", value = 20 },
                     new ModletStep { field = "boolValue", value = true}
                 }
             };
-            m.ApplyModifier(mod);
+            ModFile f = new ModFile("TestModletList", repo, new MockLogger());
+            f.ApplyMod(mod);
             Assert.AreEqual(obj.intValue, 20);
             Assert.IsTrue(obj.boolValue);
         }
@@ -419,8 +406,7 @@ namespace PPDefModifierTests
             MockRepo repo = new MockRepo();
             TestClass obj = new TestClass { intValue = 10, boolValue = false };
             repo.AddDef("a", obj);
-            ModFile m = new ModFile("ModletList", repo);
-            ModifierDefinition mod = new ModifierDefinition
+            ModDefinition mod = new ModDefinition
             {
                 guid = "a",
                 modletlist = new List<ModletStep> {
@@ -431,7 +417,8 @@ namespace PPDefModifierTests
                     new ModletStep { field = "boolValue", value = true}
                 }
             };
-            m.ApplyModifier(mod);
+            ModFile f = new ModFile("ModlietListWithMalformedSteps", repo, new MockLogger());
+            f.ApplyMod(mod);
             Assert.AreEqual(obj.intValue, 20);
             Assert.IsTrue(obj.boolValue);
         }
