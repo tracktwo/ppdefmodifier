@@ -1,5 +1,7 @@
 # Phoenix Point Def Modifier
 
+### [Download here](https://github.com/tracktwo/ppdefmodifier/releases)
+
 This mod allows easy edits to some game values in Phoenix Point without needing to build a full mod for each one. The values to change are put into a configuration file and the file is read an applied when the game loads. If you are familiar with INI mods in XCOM games, this can do something similar. Unfortunately this is not quite as straightforward as .ini modding - a big part of making this useful is _finding_ the value you want to change and this is currently not very easy.
 
 
