@@ -7,7 +7,7 @@ namespace PPDefModifier
 {
     // Represents a single mod to apply.
     public class Mod
-    { 
+    {
         /// <summary>
         /// Construct a new mod object
         /// </summary>
@@ -127,7 +127,9 @@ namespace PPDefModifier
                     }
 
                     if (obj == null)
+                    {
                         BadMod("Could not retrieve object from field {0} in type {1}", fieldString, type.Name);
+                    }
                     type = obj.GetType();
 
                     // If the element we are looking at in the field list is a value type then 'obj' is a boxed copy of the value in the repo. We can change it,
@@ -166,7 +168,7 @@ namespace PPDefModifier
         /// <summary>
         /// Given a field name that potentially includes an optional array index decompose the
         /// field into the name and the index within the array bounds.
-        /// 
+        ///
         /// e.g. given "someField" returns "someField" and sets index to -1.
         ///      given "indexedField[2]" returns "indexedField" and sets index to 2.
         /// </summary>

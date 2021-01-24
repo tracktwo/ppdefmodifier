@@ -2,38 +2,27 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using UnityEngine;
 using Base.Core;
 using Base.Defs;
 using Newtonsoft.Json;
 
 namespace PPDefModifier
 {
-    using ModnixCallback = Func<string, object, object>;
-
     /// <summary>
     /// An object representing a mod config file. The config file is a list of one or more mods.
     /// </summary>
-    public class ModFile
+    internal class ModFile
     {
         /// <summary>
         /// Construct a new mod file object from the given filename.
         /// </summary>
         /// <param name="fileName">Path to the mod config file</param>
         /// <param name="api">A (possibly null) callback object for Modnix.</param>
-        public ModFile(string fileName, ModnixCallback api)
+        public ModFile(string fileName)
         {
             this.fileName = fileName;
             this.repo = new PPDefRepository(GameUtl.GameComponent<DefRepository>());
-            this.api = api;
-            if (api != null)
-            {
-                this.logger = new ModnixLogger(api);
-            }
-            else
-            {
-                this.logger = new UnityLogger();
-            }
+            this.logger = PPDefLogger.logger;
         }
 
         /// <summary>
@@ -62,7 +51,7 @@ namespace PPDefModifier
             // If the mod contains a modletlist expand it out into individual mods and apply each in turn.
             if (def.modletlist != null)
             {
-                // The index 
+                // The index
                 int modletIndex = 1;
                 // Make a new ModifierDefinition for each modlet in the modlet list and apply it.
                 foreach (ModletStep modlet in def.modletlist)
@@ -123,7 +112,7 @@ namespace PPDefModifier
                 logger.Error("Caught exception reading file {0}: {1}", fileName, e.ToString());
                 return;
             }
-  
+
             if (mods == null || mods.Count() == 0)
             {
                 logger.Error("Failed to parse mod file {0}", fileName);
@@ -154,11 +143,8 @@ namespace PPDefModifier
         private IDefRepository repo { get; set; }
 
         /// <summary>
-        /// A callback into the modnix mod loader if used, or null if not using modnix.
-        /// Logs/Errors will be directed here if possible, or the game's logfile otherwise.
+        /// The logger to use.
         /// </summary>
-        private ModnixCallback api { get; set; }
-
         private ILogger logger { get; set; }
 
     }
