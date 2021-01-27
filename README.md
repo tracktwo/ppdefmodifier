@@ -147,6 +147,19 @@ The highlighted lines are the ones that you need to build the mod config. The fi
 }
 ```
 
+### Using Dump Data to find data path
+
+Alternatively, the [Dump Data mod](https://www.nexusmods.com/phoenixpoint/mods/50) can produce xml data files in a structure that reflect their in-game hierarchy.
+
+Follow the mod's [guide](https://staticdelivery.nexusmods.com/mods/3094/images/50/50-1611670962-779518626.png) to extract the data.
+
+Using the same example as above, you can find Manticore in GeoActorDef, and see that you can change the value of `BaseStats.SpaceForUnits`.
+
+![manticore example](doc/dump_data_example.png)
+
+When you find the guid of a data, becareful to *not* use the guid of its ViewElement.
+In the screenshot above, `228f2cd8-...` is the correct one that contains BaseStats, not `23600e0a-...`.
+
 # Configuration File Format Reference
 
 Mod configuration files are json files. This mod will read all .json files in the `PPDefModifier` directory under `Mods` or any subdirectory within it, as well as a file named `PPDefModifier.json` if it exists in the `Mods` directory directly. Placing individual mod configuration files in a `PPDefModifier` directory or a subdirectory below it is the preferred method, the `PPDefModifier.json` file in the `Mods` directory is for backwards compatibility with the original release.
@@ -187,6 +200,18 @@ An optional field used to describe the mod, since json does not support comments
 
 If more than one change is needed in a single `cls` or `guid`, you can combine them in a `modletlist` instead of specifying a full mod block for each change and repeating the guid or class in each. `modletlist` is used instead of `field` and `value`, and is an array of objects containing both `field` and `value`. The mod will apply the changes specified in each
 element of the modletlist.
+
+## Flags
+
+The `flags` field is a list of string that affect PPDefModifier's behaviour when applying the mod object.
+
+### Actions
+
+When the _first_ mod object have this flag, e.g. `flags:[{"Actions"}]`, the .json file will be deferred _if_ both the installed PPDefModifier _and_ the installed Modnix supports [Modnix Actions](https://github.com/Sheep-y/Modnix/wiki/Action-Specs).
+
+Only use this flag when the json mod is part of a Modnix 3 Action Mod
+([Example](https://github.com/Sheep-y/Modnix/tree/master/Demo%20Mods/Tailwind)).
+Standalone json mods should not carry this flag.
 
 # Future Work
 

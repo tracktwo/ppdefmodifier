@@ -53,4 +53,28 @@ namespace PPDefModifierTests
         }
 
     }
+
+    [TestClass]
+    public class ModMethodTests
+    {
+        [TestMethod]
+        public void TestHasFlag()
+        {
+            ModDefinition def = new ModDefinition { flags = null };
+            Assert.IsFalse(def.HasFlag("Foo"), "null flags");
+
+            def = new ModDefinition { flags = new string[]{ } };
+            Assert.IsFalse(def.HasFlag("Foo"), "zero flags");
+
+            def = new ModDefinition { flags = new string[]{ "" } };
+            Assert.IsFalse(def.HasFlag("Foo"), "empty flags");
+
+            def = new ModDefinition { flags = new string[]{ "bar", "foobar" } };
+            Assert.IsFalse(def.HasFlag("Foo"), "no matching flag");
+
+            def = new ModDefinition { flags = new string[]{ "foo", "bar" } };
+            Assert.IsTrue(def.HasFlag("Foo"), "matching flag");
+        }
+
+    }
 }
