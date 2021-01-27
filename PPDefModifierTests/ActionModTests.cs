@@ -73,7 +73,7 @@ namespace PPDefModifierTests
             Assert.AreEqual("txt", mod.modletlist[0].field, "modletlist[0].field");
             Assert.AreEqual("mv1", mod.modletlist[0].value, "modletlist[0].value");
             Assert.AreEqual("int", mod.modletlist[1].field, "modletlist[1].field");
-            Assert.AreEqual(1234l, mod.modletlist[1].value, "modletlist[1].value");
+            Assert.AreEqual(1234L, mod.modletlist[1].value, "modletlist[1].value");
             Assert.AreEqual("dec", mod.modletlist[2].field, "modletlist[2].field");
             Assert.AreEqual(12.34, mod.modletlist[2].value, "modletlist[2].value");
             Assert.AreEqual("bol", mod.modletlist[3].field, "modletlist[3].field");
